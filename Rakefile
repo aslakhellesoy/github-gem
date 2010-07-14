@@ -4,16 +4,17 @@ require 'rake'
 begin
   require 'echoe'
 
-  Echoe.new('github', '0.4.1') do |p|
+  Echoe.new('github', '0.4.2') do |p|
     p.rubyforge_name = 'github'
     p.summary      = "The official `github` command line helper for simplifying your GitHub experience."
     p.description  = "The official `github` command line helper for simplifying your GitHub experience."
     p.url          = "http://github.com/"
     p.author       = ['Chris Wanstrath', 'Kevin Ballard', 'Scott Chacon', 'Dr Nic Williams']
-    p.email        = "chris@ozmm.org"
+    p.email        = "drnicwilliams@gmail.com"
     p.dependencies = [
       "text-format >=1.0.0",
-      "highline ~>1.5.1"
+      "highline ~>1.5.1",
+      "json >=1.2.0"
     ]
   end
 
