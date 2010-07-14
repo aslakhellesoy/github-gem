@@ -8,13 +8,16 @@ command :home do |user|
 end
 
 desc "Automatically set configuration info, or pass args to specify."
-usage "github config [my_username] [my_repo_name]"
-command :config do |user, repo|
-  user ||= ENV['USER']
-  repo ||= File.basename(FileUtils.pwd)
+usage "github config [my_username] [my_token]"
+command :config do |user, token|
+  require "highline"
+  highline = HighLine.new
+  user  ||= highline.ask("What is your github user? ") {|q| q.default = ENV['USER']}
+  token ||= highline.ask("What is your github token? ")
+  repo  ||= File.basename(FileUtils.pwd)
   git "config --global github.user #{user}"
-  git "config github.repo #{repo}"
-  puts "Configured with github.user #{user}, github.repo #{repo}"
+  git "config --global github.token #{token}"
+  puts "Configured with github.user #{user}"
 end
 
 desc "Open this repo in a web browser."
@@ -183,7 +186,8 @@ flags :rdoc => 'Create README.rdoc'
 flags :rst => 'Create README.rst'
 flags :private => 'Create private repository'
 command :create do |repo|
-  sh "curl -F 'repository[name]=#{repo}' -F 'repository[public]=#{!options[:private]}' -F 'login=#{github_user}' -F 'token=#{github_token}' http://github.com/repositories"
+  public_repo = options[:private].nil?
+  github_post "http://github.com/repositories", "repository[name]" => repo, "repository[public]" => public_repo
   mkdir repo
   cd repo
   git "init"
@@ -213,7 +217,7 @@ command :fork do |user, repo|
     end
   end
 
-  sh "curl -F 'login=#{github_user}' -F 'token=#{github_token}' http://github.com/#{user}/#{repo}/fork"
+  github_post "http://github.com/#{user}/#{repo}/fork"
 
   url = "git@github.com:#{github_user}/#{repo}.git"
   if is_repo
@@ -230,17 +234,13 @@ desc "Create a new GitHub repository from the current local repository"
 flags :private => 'Create private repository'
 command :'create-from-local' do
   cwd = sh "pwd"
-  repo = File.basename(cwd)
+  repo = File.basename(cwd, ".git")
   is_repo = !git("status").match(/fatal/)
   raise "Not a git repository. Use gh create instead" unless is_repo
-  created = sh  "curl -F 'repository[name]=#{repo}' -F 'repository[public]=#{!options[:private].inspect}' -F 'login=#{github_user}' -F 'token=#{github_token}' http://github.com/repositories"
-  if created.out =~ %r{You are being <a href="http://github.com/#{github_user}/([^"]+)"}
-    git "remote add origin git@github.com:#{github_user}/#{$1}.git"
-    git_exec "push origin master"
-  else
-    #TODO try to explain why it failed
-    die "error creating repository"
-  end
+  public_repo = options[:private].nil?
+  github_post "http://github.com/repositories", "repository[name]" => repo, "repository[public]" => public_repo
+  git "remote add origin git@github.com:#{github_user}/#{repo}.git"
+  git_exec "push origin master"
 end
 
 desc "Search GitHub for the given repository name."

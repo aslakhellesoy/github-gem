@@ -1,3 +1,14 @@
+== 0.4.4 2010-06-05
+
+Fixed creation of public repositories
+
+Refactored curl commands into common helper [kch]
+
+== 0.4.3
+
+Updated command:
+  * gh config - asks for user/token if not provided
+
 == 0.4.2
 
 New protocols supported: http, git+ssh, git+ssh://git@
